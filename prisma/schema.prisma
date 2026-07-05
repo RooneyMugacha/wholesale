@@ -1,0 +1,50 @@
+datasource db {
+  provider = "sqlite"
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model Product {
+  id          Int             @id @default(autoincrement())
+  sku         String          @unique
+  title       String
+  description String
+  price       Float           // Base price for single unit
+  stock       Int
+  imageUrl    String
+  specs       String          // JSON string for dynamic specs
+  tiers       BulkPriceTier[]
+  orderItems  OrderItem[]
+}
+
+model BulkPriceTier {
+  id        Int     @id @default(autoincrement())
+  productId Int
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  quantity  Int     // Min quantity to get this unitPrice
+  unitPrice Float   // Unit price at this tier
+}
+
+model Order {
+  id           Int         @id @default(autoincrement())
+  customerName String
+  companyName  String
+  email        String
+  total        Float
+  status       String      @default("PENDING") // PENDING, PROCESSING, COMPLETED
+  createdAt    DateTime    @default(now())
+  items        OrderItem[]
+}
+
+model OrderItem {
+  id         Int     @id @default(autoincrement())
+  orderId    Int
+  order      Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  productId  Int
+  product    Product @relation(fields: [productId], references: [id])
+  quantity   Int
+  unitPrice  Float
+  totalPrice Float
+}
